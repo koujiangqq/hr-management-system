@@ -1,8 +1,6 @@
 package com.hr.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/actuator")
-public class HealthController implements HealthIndicator {
+public class HealthController {
     
     @Autowired
     private DataSource dataSource;
@@ -50,33 +48,6 @@ public class HealthController implements HealthIndicator {
             health.put("status", "DOWN");
             health.put("error", e.getMessage());
             return ResponseEntity.status(503).body(health);
-        }
-    }
-    
-    /**
-     * Spring Boot Actuator 健康检查
-     */
-    @Override
-    public Health health() {
-        try {
-            boolean dbHealthy = checkDatabase();
-            
-            if (dbHealthy) {
-                return Health.up()
-                    .withDetail("database", "UP")
-                    .withDetail("timestamp", LocalDateTime.now())
-                    .build();
-            } else {
-                return Health.down()
-                    .withDetail("database", "DOWN")
-                    .withDetail("timestamp", LocalDateTime.now())
-                    .build();
-            }
-        } catch (Exception e) {
-            return Health.down()
-                .withDetail("error", e.getMessage())
-                .withDetail("timestamp", LocalDateTime.now())
-                .build();
         }
     }
     
