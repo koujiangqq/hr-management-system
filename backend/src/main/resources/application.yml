@@ -52,12 +52,26 @@ spring:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
 
-# MinIO 配置
-minio:
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
-  bucket-name: hr-files
+# WebDAV 配置
+webdav:
+  url: ${WEBDAV_URL:http://localhost:8081/webdav}
+  username: ${WEBDAV_USERNAME:admin}
+  password: ${WEBDAV_PASSWORD:admin123}
+  base-path: ${WEBDAV_BASE_PATH:/hr-files}
+
+# Paperless-ngx 配置
+paperless:
+  api:
+    url: ${PAPERLESS_API_URL:http://localhost:8000/api}
+    token: ${PAPERLESS_API_TOKEN:}
+  
+# OpenAI 配置
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    model: ${OPENAI_MODEL:gpt-3.5-turbo}
+    timeout: 30000
 
 # JWT 配置
 jwt:

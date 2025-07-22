@@ -29,12 +29,20 @@ services:
       - DB_NAME=hr_system
       - DB_USER=root
       - DB_PASSWORD=hr123456
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBDAV_URL=http://webdav:8080/webdav
+      - WEBDAV_USERNAME=admin
+      - WEBDAV_PASSWORD=admin123
+      - PAPERLESS_API_URL=http://paperless:8000/api
+      - PAPERLESS_API_TOKEN=${PAPERLESS_API_TOKEN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
     depends_on:
       - mysql
-      - minio
+      - redis
+      - webdav
     networks:
       - app-network
 
@@ -54,18 +62,43 @@ services:
     networks:
       - app-network
 
-  # MinIO 对象存储
-  minio:
-    image: minio/minio:latest
+  # WebDAV 文件存储
+  webdav:
+    image: bytemark/webdav:latest
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8081:8080"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    command: server /data --console-address ":9001"
+      AUTH_TYPE: Basic
+      USERNAME: admin
+      PASSWORD: admin123
     volumes:
-      - minio-data:/data
+      - webdav-data:/var/lib/dav
+    networks:
+      - app-network
+
+  # Paperless-NGX 文档管理系统（可选）
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    ports:
+      - "8000:8000"
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: mysql
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: paperless123
+      PAPERLESS_SECRET_KEY: paperless-secret-key-change-me
+      PAPERLESS_URL: http://localhost:8000
+      PAPERLESS_TIME_ZONE: Asia/Shanghai
+      PAPERLESS_OCR_LANGUAGE: chi_sim+eng
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - paperless-export:/usr/src/paperless/export
+      - paperless-consume:/usr/src/paperless/consume
+    depends_on:
+      - mysql
+      - redis
     networks:
       - app-network
 
@@ -81,8 +114,12 @@ services:
 
 volumes:
   mysql-data:
-  minio-data:
   redis-data:
+  webdav-data:
+  paperless-data:
+  paperless-media:
+  paperless-export:
+  paperless-consume:
 
 networks:
   app-network:

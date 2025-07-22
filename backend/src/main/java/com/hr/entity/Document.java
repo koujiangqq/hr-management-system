@@ -7,8 +7,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 文档实体类
@@ -26,13 +26,10 @@ public class Document {
     private String title;
     
     @Column(nullable = false)
-    private String originalName;
+    private String fileName;
     
     @Column(nullable = false)
-    private String storagePath;
-    
-    @Column(nullable = false)
-    private String fileType;
+    private String filePath;
     
     @Column(nullable = false)
     private Long fileSize;
@@ -40,36 +37,40 @@ public class Document {
     @Column
     private String contentType;
     
-    @Enumerated(EnumType.STRING)
-    private DocumentCategory category;
+    @Column
+    private String category;
     
     @Column(columnDefinition = "TEXT")
     private String description;
     
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+    
     @Column
     private LocalDate expirationDate;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uploader_id")
-    private User uploader;
+    @Column(name = "uploaded_by")
+    private Long uploadedBy;
     
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(
         name = "document_tags",
         joinColumns = @JoinColumn(name = "document_id"),
         inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private Set<Tag> tags = new HashSet<>();
+    private List<Tag> tags = new ArrayList<>();
+    
+    @Column
+    private Long paperlessId;
     
     @Column(nullable = false)
-    private Boolean aiGenerated = false;
+    private Boolean aiProcessed = false;
     
     @Column
     private Integer downloadCount = 0;
     
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdTime;
+    @Column(name = "upload_time", nullable = false, updatable = false)
+    private LocalDateTime uploadTime;
     
     @LastModifiedDate
     @Column(nullable = false)
@@ -77,16 +78,6 @@ public class Document {
     
     // 构造函数
     public Document() {}
-    
-    public Document(String title, String originalName, String storagePath, 
-                   String fileType, Long fileSize, User uploader) {
-        this.title = title;
-        this.originalName = originalName;
-        this.storagePath = storagePath;
-        this.fileType = fileType;
-        this.fileSize = fileSize;
-        this.uploader = uploader;
-    }
     
     // Getters and Setters
     public Long getId() {
@@ -105,28 +96,20 @@ public class Document {
         this.title = title;
     }
     
-    public String getOriginalName() {
-        return originalName;
+    public String getFileName() {
+        return fileName;
     }
     
-    public void setOriginalName(String originalName) {
-        this.originalName = originalName;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
     
-    public String getStoragePath() {
-        return storagePath;
+    public String getFilePath() {
+        return filePath;
     }
     
-    public void setStoragePath(String storagePath) {
-        this.storagePath = storagePath;
-    }
-    
-    public String getFileType() {
-        return fileType;
-    }
-    
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
     
     public Long getFileSize() {
@@ -145,11 +128,11 @@ public class Document {
         this.contentType = contentType;
     }
     
-    public DocumentCategory getCategory() {
+    public String getCategory() {
         return category;
     }
     
-    public void setCategory(DocumentCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
     
@@ -161,6 +144,14 @@ public class Document {
         this.description = description;
     }
     
+    public String getSummary() {
+        return summary;
+    }
+    
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+    
     public LocalDate getExpirationDate() {
         return expirationDate;
     }
@@ -169,28 +160,36 @@ public class Document {
         this.expirationDate = expirationDate;
     }
     
-    public User getUploader() {
-        return uploader;
+    public Long getUploadedBy() {
+        return uploadedBy;
     }
     
-    public void setUploader(User uploader) {
-        this.uploader = uploader;
+    public void setUploadedBy(Long uploadedBy) {
+        this.uploadedBy = uploadedBy;
     }
     
-    public Set<Tag> getTags() {
+    public List<Tag> getTags() {
         return tags;
     }
     
-    public void setTags(Set<Tag> tags) {
+    public void setTags(List<Tag> tags) {
         this.tags = tags;
     }
     
-    public Boolean getAiGenerated() {
-        return aiGenerated;
+    public Long getPaperlessId() {
+        return paperlessId;
     }
     
-    public void setAiGenerated(Boolean aiGenerated) {
-        this.aiGenerated = aiGenerated;
+    public void setPaperlessId(Long paperlessId) {
+        this.paperlessId = paperlessId;
+    }
+    
+    public Boolean getAiProcessed() {
+        return aiProcessed;
+    }
+    
+    public void setAiProcessed(Boolean aiProcessed) {
+        this.aiProcessed = aiProcessed;
     }
     
     public Integer getDownloadCount() {
@@ -201,12 +200,12 @@ public class Document {
         this.downloadCount = downloadCount;
     }
     
-    public LocalDateTime getCreatedTime() {
-        return createdTime;
+    public LocalDateTime getUploadTime() {
+        return uploadTime;
     }
     
-    public void setCreatedTime(LocalDateTime createdTime) {
-        this.createdTime = createdTime;
+    public void setUploadTime(LocalDateTime uploadTime) {
+        this.uploadTime = uploadTime;
     }
     
     public LocalDateTime getUpdatedTime() {
