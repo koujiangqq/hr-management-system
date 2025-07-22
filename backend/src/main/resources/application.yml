@@ -11,7 +11,7 @@ spring:
     active: dev
   
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:hr_system}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:hr_system}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&useLocalSessionState=true&rewriteBatchedStatements=true
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:hr123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
