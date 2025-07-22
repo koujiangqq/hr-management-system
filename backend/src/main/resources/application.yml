@@ -75,7 +75,7 @@ openai:
 
 # JWT 配置
 jwt:
-  secret: ${JWT_SECRET:hrManagementSystemSecretKey2024}
+  secret: ${JWT_SECRET:hrManagementSystemVeryLongSecretKeyForJWTTokenGeneration2024!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789}
   expiration: 86400000 # 24小时
 
 # 文件上传配置
