@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统测试页面</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #238636;
+            color: white;
+        }
+        .status.error {
+            background: #da3633;
+            color: white;
+        }
+        .status.loading {
+            background: #f85149;
+            color: white;
+        }
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2ea043;
+        }
+        .log {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 行政人事管理系统 - 测试页面</h1>
+        
+        <div class="card">
+            <h3>系统状态检查</h3>
+            <p>前端服务: <span id="frontend-status" class="status loading">检查中...</span></p>
+            <p>后端API: <span id="backend-status" class="status loading">检查中...</span></p>
+            <p>数据库: <span id="database-status" class="status loading">检查中...</span></p>
+            <p>MinIO存储: <span id="minio-status" class="status loading">检查中...</span></p>
+            
+            <button onclick="checkAllServices()">重新检查</button>
+            <button onclick="openFrontend()">打开前端</button>
+            <button onclick="openMinIO()">打开MinIO</button>
+        </div>
+        
+        <div class="card">
+            <h3>快速测试</h3>
+            <button onclick="testLogin()">测试登录</button>
+            <button onclick="testHealthCheck()">健康检查</button>
+            <button onclick="testFileUpload()">测试文件上传</button>
+            
+            <div id="test-log" class="log" style="margin-top: 10px; height: 150px;"></div>
+        </div>
+        
+        <div class="card">
+            <h3>系统信息</h3>
+            <p><strong>前端地址:</strong> <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+            <p><strong>后端API:</strong> <a href="http://localhost:8080/api" target="_blank">http://localhost:8080/api</a></p>
+            <p><strong>MinIO控制台:</strong> <a href="http://localhost:9001" target="_blank">http://localhost:9001</a></p>
+            <p><strong>默认账号:</strong> admin / admin123</p>
+        </div>
+        
+        <div class="card">
+            <h3>Docker 命令</h3>
+            <div class="log">
+# 查看服务状态
+docker-compose ps
+
+# 查看后端日志
+docker-compose logs -f backend
+
+# 查看前端日志
+docker-compose logs -f frontend
+
+# 重启服务
+docker-compose restart
+
+# 停止服务
+docker-compose down
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logElement = document.getElementById('test-log');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function setStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = text;
+        }
+        
+        async function checkService(url, statusElementId, serviceName) {
+            try {
+                const response = await fetch(url, { 
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                setStatus(statusElementId, 'success', '正常');
+                log(`${serviceName} 服务正常`);
+                return true;
+            } catch (error) {
+                setStatus(statusElementId, 'error', '异常');
+                log(`${serviceName} 服务异常: ${error.message}`);
+                return false;
+            }
+        }
+        
+        async function checkAllServices() {
+            log('开始检查系统服务状态...');
+            
+            // 重置状态
+            ['frontend-status', 'backend-status', 'database-status', 'minio-status'].forEach(id => {
+                setStatus(id, 'loading', '检查中...');
+            });
+            
+            // 检查前端
+            await checkService('http://localhost:3000', 'frontend-status', '前端');
+            
+            // 检查后端健康检查
+            try {
+                const response = await fetch('http://localhost:8080/api/actuator/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    setStatus('backend-status', 'success', '正常');
+                    setStatus('database-status', data.components?.database?.status === 'UP' ? 'success' : 'error', 
+                             data.components?.database?.status || '未知');
+                    log('后端API服务正常');
+                    log(`数据库状态: ${data.components?.database?.status || '未知'}`);
+                } else {
+                    setStatus('backend-status', 'error', '异常');
+                    setStatus('database-status', 'error', '异常');
+                    log('后端API服务异常');
+                }
+            } catch (error) {
+                setStatus('backend-status', 'error', '异常');
+                setStatus('database-status', 'error', '异常');
+                log(`后端API服务异常: ${error.message}`);
+            }
+            
+            // 检查MinIO
+            await checkService('http://localhost:9001', 'minio-status', 'MinIO');
+            
+            log('服务状态检查完成');
+        }
+        
+        async function testLogin() {
+            log('测试登录功能...');
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        log('✅ 登录测试成功');
+                        log(`用户: ${data.user.realName} (${data.user.role})`);
+                    } else {
+                        log(`❌ 登录失败: ${data.message}`);
+                    }
+                } else {
+                    log(`❌ 登录请求失败: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ 登录测试异常: ${error.message}`);
+            }
+        }
+        
+        async function testHealthCheck() {
+            log('执行健康检查...');
+            try {
+                const response = await fetch('http://localhost:8080/api/actuator/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 健康检查成功`);
+                    log(`系统状态: ${data.status}`);
+                    log(`应用: ${data.application} v${data.version}`);
+                } else {
+                    log(`❌ 健康检查失败: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ 健康检查异常: ${error.message}`);
+            }
+        }
+        
+        function testFileUpload() {
+            log('文件上传功能需要在前端页面测试');
+            log('请访问: http://localhost:3000/files/upload');
+        }
+        
+        function openFrontend() {
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        function openMinIO() {
+            window.open('http://localhost:9001', '_blank');
+        }
+        
+        // 页面加载时自动检查服务状态
+        window.onload = function() {
+            log('页面加载完成，开始检查系统状态...');
+            setTimeout(checkAllServices, 1000);
+        };
+    </script>
+</body>
+</html>
