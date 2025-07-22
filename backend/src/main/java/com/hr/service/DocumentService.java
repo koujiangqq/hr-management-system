@@ -266,7 +266,7 @@ public class DocumentService {
                 Tag newTag = new Tag();
                 newTag.setName(tagName.trim());
                 newTag.setColor(generateRandomColor());
-                newTag.setCreatedTime(LocalDateTime.now());
+                newTag.setAiGenerated(true);
                 tags.add(tagRepository.save(newTag));
             }
         }

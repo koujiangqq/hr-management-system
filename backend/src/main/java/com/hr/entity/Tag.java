@@ -29,6 +29,9 @@ public class Tag {
     @Column
     private Integer useCount = 0;
     
+    @Column(length = 7)
+    private String color = "#007bff";
+    
     @ManyToMany(mappedBy = "tags", fetch = FetchType.LAZY)
     private Set<Document> documents = new HashSet<>();
     
@@ -79,6 +82,14 @@ public class Tag {
     
     public void setUseCount(Integer useCount) {
         this.useCount = useCount;
+    }
+    
+    public String getColor() {
+        return color;
+    }
+    
+    public void setColor(String color) {
+        this.color = color;
     }
     
     public Set<Document> getDocuments() {
